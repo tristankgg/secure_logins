@@ -111,23 +111,6 @@
             cursor: not-allowed;
         }
 
-        .button-secondary {
-            background: #6c757d;
-            margin-top: 10px;
-        }
-
-        .button-secondary:hover {
-            background: #5a6268;
-        }
-
-        .button-danger {
-            background: #dc3545;
-        }
-
-        .button-danger:hover {
-            background: #c82333;
-        }
-
         .tab-buttons {
             display: flex;
             gap: 10px;
@@ -277,18 +260,27 @@
             font-size: 13px;
         }
 
-        .loading {
-            display: inline-block;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
         .hidden {
             display: none;
+        }
+
+        .version-badge {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 999;
+        }
+
+        .version-badge:hover {
+            background: #5568d3;
+            cursor: pointer;
         }
 
         @media (max-width: 600px) {
@@ -316,14 +308,6 @@
             .action-btn {
                 padding: 4px 8px;
                 font-size: 11px;
-            }
-
-            .tab-buttons {
-                gap: 5px;
-            }
-
-            .tab-btn {
-                padding: 10px 15px;
             }
         }
     </style>
@@ -412,96 +396,138 @@
                     </div>
                     <button type="submit" id="addMemoBtn">Add Memo</button>
                 </form>
+
+                <h3 style="margin: 30px 0 15px; color: #333;">GitHub Sync Info</h3>
+                <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; font-size: 13px;">
+                    <p><strong>📝 Note:</strong> Changes are stored locally in your browser.</p>
+                    <p style="margin-top: 10px;">To make changes permanent, you need to:</p>
+                    <ol style="margin-top: 10px; margin-left: 20px;">
+                        <li>Copy your users/memos data below</li>
+                        <li>Paste it into users.json and memos.json in your GitHub repo</li>
+                        <li>Or use the GitHub web editor to manually update</li>
+                    </ol>
+                    <button type="button" onclick="exportData()" style="margin-top: 15px;">
+                        📥 Export Data (Copy to GitHub)
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Version Badge -->
+    <div class="version-badge" title="Click for version history">
+        v0.01
+    </div>
+
     <script>
-        // Configuration - adjust API_BASE_URL based on your deployment
-        const API_BASE_URL = 'http://localhost:3000'; // Change for production
-        
+        // VERSION MANAGEMENT
+        const APP_VERSION = '0.01';
+        const VERSION_HISTORY = [
+            { version: '0.01', date: new Date().toISOString().split('T')[0], changes: 'Initial release - Login, Memos, Admin Panel' }
+        ];
+
+        // Display version history when badge is clicked
+        document.addEventListener('DOMContentLoaded', function() {
+            const versionBadge = document.querySelector('.version-badge');
+            if (versionBadge) {
+                versionBadge.addEventListener('click', showVersionHistory);
+            }
+        });
+
+        function showVersionHistory() {
+            let historyText = '📜 VERSION HISTORY\n\n';
+            VERSION_HISTORY.forEach(v => {
+                historyText += `v${v.version} (${v.date})\n`;
+                historyText += `✓ ${v.changes}\n\n`;
+            });
+            historyText += 'Current: v' + APP_VERSION;
+            alert(historyText);
+        }
+
         let currentUser = null;
-        let authToken = null;
+        let usersData = [];
+        let memosData = [];
 
         // Initialize app
         window.addEventListener('load', () => {
+            loadDataFromLocalStorage();
             document.getElementById('loginForm').addEventListener('submit', handleLogin);
             document.getElementById('addUserForm').addEventListener('submit', handleAddUser);
             document.getElementById('addMemoForm').addEventListener('submit', handleAddMemo);
         });
 
-        // API call helper
-        async function apiCall(method, endpoint, data = null) {
-            const options = {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            };
-
-            if (authToken) {
-                options.headers['Authorization'] = `Bearer ${authToken}`;
-            }
-
-            if (currentUser) {
-                options.headers['X-User-Email'] = currentUser;
-            }
-
-            if (data) {
-                options.body = JSON.stringify(data);
-            }
-
+        // Load data from localStorage (persists in browser)
+        function loadDataFromLocalStorage() {
             try {
-                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-                const result = await response.json();
+                const savedUsers = localStorage.getItem('usersData');
+                const savedMemos = localStorage.getItem('memosData');
 
-                if (!response.ok) {
-                    throw new Error(result.error || 'API error');
+                if (savedUsers) {
+                    usersData = JSON.parse(savedUsers);
+                } else {
+                    // Default data
+                    usersData = [
+                        { email: 'admin@company.com', password: 'admin123' },
+                        { email: 'user@company.com', password: 'user123' }
+                    ];
+                    localStorage.setItem('usersData', JSON.stringify(usersData));
                 }
 
-                return result;
+                if (savedMemos) {
+                    memosData = JSON.parse(savedMemos);
+                } else {
+                    // Default memos
+                    memosData = [
+                        { 
+                            title: 'Q1 2024 Strategic Initiative',
+                            content: 'This quarter we\'re focusing on three key initiatives: improving operational efficiency, expanding our market presence, and investing in team development.',
+                            date: '2024-01-15'
+                        },
+                        { 
+                            title: 'Updated Company Policy',
+                            content: 'Please review the updated remote work policy effective immediately. Employees are now permitted to work remotely up to 3 days per week with manager approval.',
+                            date: '2024-01-10'
+                        },
+                        { 
+                            title: 'Security Training Reminder',
+                            content: 'All employees are required to complete the annual security training by January 31st. Access the training module through your employee portal.',
+                            date: '2024-01-05'
+                        }
+                    ];
+                    localStorage.setItem('memosData', JSON.stringify(memosData));
+                }
             } catch (error) {
-                throw error;
+                console.error('Error loading data:', error);
             }
         }
 
         // Handle login
-        async function handleLogin(e) {
+        function handleLogin(e) {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
             const messageDiv = document.getElementById('loginMessage');
-            const loginBtn = document.getElementById('loginBtn');
 
-            try {
-                loginBtn.disabled = true;
-                loginBtn.textContent = 'Logging in...';
-
-                const result = await apiCall('POST', '/api/login', { email, password });
-
-                currentUser = email;
-                authToken = result.token;
-
+            const user = usersData.find(u => u.email === email && u.password === password);
+            
+            if (user) {
+                currentUser = user;
                 messageDiv.innerHTML = '';
                 document.getElementById('loginSection').classList.add('hidden');
                 document.getElementById('authSection').classList.remove('hidden');
                 document.getElementById('userEmail').textContent = email;
-
-                // Show/hide admin tab
+                
+                // Show admin tab only for admin
                 const adminTabBtn = document.getElementById('adminTabBtn');
-                if (result.isAdmin) {
+                if (email === 'admin@company.com') {
                     adminTabBtn.classList.remove('hidden');
-                    loadUsers();
                 } else {
                     adminTabBtn.classList.add('hidden');
                 }
-
-                loadMemos();
-            } catch (error) {
-                messageDiv.innerHTML = `<div class="message error">${error.message}</div>`;
-            } finally {
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'Login';
+                
+                renderMemos();
+            } else {
+                messageDiv.innerHTML = '<div class="message error">Invalid email or password</div>';
             }
         }
 
@@ -517,35 +543,23 @@
             if (tabName === 'memos') {
                 document.getElementById('memosTab').classList.add('active');
                 document.querySelectorAll('.tab-btn')[0].classList.add('active');
-                loadMemos();
+                renderMemos();
             } else if (tabName === 'admin') {
                 document.getElementById('adminTab').classList.add('active');
                 document.getElementById('adminTabBtn').classList.add('active');
-                loadUsers();
-            }
-        }
-
-        // Load memos
-        async function loadMemos() {
-            try {
-                const memos = await apiCall('GET', '/api/memos');
-                renderMemos(memos);
-            } catch (error) {
-                document.getElementById('memosContainer').innerHTML = 
-                    `<div class="message error">Error loading memos: ${error.message}</div>`;
+                renderUsersTable();
             }
         }
 
         // Render memos
-        function renderMemos(memos) {
+        function renderMemos() {
             const container = document.getElementById('memosContainer');
-            
-            if (!memos || memos.length === 0) {
+            if (memosData.length === 0) {
                 container.innerHTML = '<p style="color: #666;">No memos available yet.</p>';
                 return;
             }
-
-            container.innerHTML = memos.map(memo => `
+            
+            container.innerHTML = memosData.map(memo => `
                 <div class="memo-card">
                     <h3>${escapeHtml(memo.title)}</h3>
                     <p>${escapeHtml(memo.content)}</p>
@@ -554,35 +568,23 @@
             `).join('');
         }
 
-        // Load users
-        async function loadUsers() {
-            try {
-                const users = await apiCall('GET', '/api/users');
-                renderUsersTable(users);
-            } catch (error) {
-                document.getElementById('usersTableContainer').innerHTML = 
-                    `<div class="message error">Error loading users: ${error.message}</div>`;
-            }
-        }
-
         // Render users table
-        function renderUsersTable(users) {
+        function renderUsersTable() {
             const container = document.getElementById('usersTableContainer');
-            
-            if (!users || users.length === 0) {
+            if (usersData.length === 0) {
                 container.innerHTML = '<p style="color: #666;">No users found.</p>';
                 return;
             }
 
             let html = '<table class="user-table"><thead><tr><th>Email</th><th>Password</th><th>Actions</th></tr></thead><tbody>';
-
-            users.forEach((user, index) => {
+            
+            usersData.forEach((user, index) => {
                 html += `
                     <tr>
                         <td>${escapeHtml(user.email)}</td>
-                        <td><span class="code">${escapeHtml(user.password)}</span></td>
+                        <td><code class="code">${escapeHtml(user.password)}</code></td>
                         <td class="action-buttons">
-                            <button class="action-btn delete" onclick="deleteUser('${escapeHtml(user.email)}')">Delete</button>
+                            <button class="action-btn delete" onclick="deleteUser(${index})">Delete</button>
                         </td>
                     </tr>
                 `;
@@ -593,86 +595,100 @@
         }
 
         // Add new user
-        async function handleAddUser(e) {
+        function handleAddUser(e) {
             e.preventDefault();
             const email = document.getElementById('newEmail').value;
             const password = document.getElementById('newPassword').value;
             const messageDiv = document.getElementById('adminMessage');
-            const btn = document.getElementById('addUserBtn');
 
-            try {
-                btn.disabled = true;
-                btn.textContent = 'Adding...';
-
-                await apiCall('POST', '/api/users', { newEmail: email, password });
-
-                messageDiv.innerHTML = '<div class="message success">User added successfully!</div>';
-                document.getElementById('addUserForm').reset();
-                await loadUsers();
-
-                setTimeout(() => {
-                    messageDiv.innerHTML = '';
-                }, 3000);
-            } catch (error) {
-                messageDiv.innerHTML = `<div class="message error">${error.message}</div>`;
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Add User';
+            if (usersData.find(u => u.email === email)) {
+                messageDiv.innerHTML = '<div class="message error">User with this email already exists</div>';
+                return;
             }
+
+            usersData.push({ email, password });
+            saveData();
+            
+            messageDiv.innerHTML = '<div class="message success">User added successfully! Don\'t forget to export and save to GitHub.</div>';
+            document.getElementById('addUserForm').reset();
+            renderUsersTable();
+            
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 5000);
         }
 
         // Delete user
-        async function deleteUser(email) {
-            if (!confirm(`Delete user ${email}?`)) return;
-
-            try {
-                await apiCall('DELETE', `/api/users/${encodeURIComponent(email)}`);
-                document.getElementById('adminMessage').innerHTML = 
-                    '<div class="message success">User deleted successfully!</div>';
-                await loadUsers();
-
+        function deleteUser(index) {
+            if (confirm('Are you sure you want to delete this user?')) {
+                usersData.splice(index, 1);
+                saveData();
+                renderUsersTable();
+                document.getElementById('adminMessage').innerHTML = '<div class="message success">User deleted successfully! Don\'t forget to export and save to GitHub.</div>';
                 setTimeout(() => {
                     document.getElementById('adminMessage').innerHTML = '';
-                }, 3000);
-            } catch (error) {
-                document.getElementById('adminMessage').innerHTML = 
-                    `<div class="message error">${error.message}</div>`;
+                }, 5000);
             }
         }
 
         // Add memo
-        async function handleAddMemo(e) {
+        function handleAddMemo(e) {
             e.preventDefault();
             const title = document.getElementById('memoTitle').value;
             const content = document.getElementById('memoContent').value;
             const messageDiv = document.getElementById('adminMessage');
-            const btn = document.getElementById('addMemoBtn');
 
-            try {
-                btn.disabled = true;
-                btn.textContent = 'Adding...';
+            const today = new Date().toISOString().split('T')[0];
+            memosData.unshift({ title, content, date: today });
+            saveData();
+            
+            messageDiv.innerHTML = '<div class="message success">Memo added successfully! Don\'t forget to export and save to GitHub.</div>';
+            document.getElementById('addMemoForm').reset();
+            
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 5000);
+        }
 
-                await apiCall('POST', '/api/memos', { title, content });
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('usersData', JSON.stringify(usersData));
+            localStorage.setItem('memosData', JSON.stringify(memosData));
+        }
 
-                messageDiv.innerHTML = '<div class="message success">Memo added successfully!</div>';
-                document.getElementById('addMemoForm').reset();
-                await loadMemos();
+        // Export data for GitHub
+        function exportData() {
+            const exportText = `
+USERS DATA - Copy this to users.json in GitHub:
+================================================
 
-                setTimeout(() => {
-                    messageDiv.innerHTML = '';
-                }, 3000);
-            } catch (error) {
-                messageDiv.innerHTML = `<div class="message error">${error.message}</div>`;
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Add Memo';
-            }
+${JSON.stringify(usersData, null, 2)}
+
+
+MEMOS DATA - Copy this to memos.json in GitHub:
+================================================
+
+${JSON.stringify(memosData, null, 2)}
+
+`;
+            
+            alert('Data copied! Instructions:\n\n1. Go to github.com/tristankgg/secure_logins\n2. Click on users.json\n3. Click the edit pencil icon\n4. Replace all content with the users data above\n5. Scroll down and click "Commit changes"\n6. Repeat for memos.json with the memos data\n\nPress OK to show the data in console (F12 to view)');
+            console.log(exportText);
+            
+            // Also copy to clipboard
+            const textarea = document.createElement('textarea');
+            textarea.value = exportText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            
+            document.getElementById('adminMessage').innerHTML = '<div class="message info">✅ Data copied to clipboard! Use it to update your GitHub repository.</div>';
         }
 
         // Logout
         function logout() {
             currentUser = null;
-            authToken = null;
             document.getElementById('authSection').classList.add('hidden');
             document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('loginForm').reset();
