@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Memos - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            margin-bottom: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .button-secondary {
+            background: #6c757d;
+            margin-top: 10px;
+        }
+
+        .button-secondary:hover {
+            background: #5a6268;
+        }
+
+        .button-danger {
+            background: #dc3545;
+        }
+
+        .button-danger:hover {
+            background: #c82333;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #666;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: auto;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .user-table th,
+        .user-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .user-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .user-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .action-btn:hover {
+            background: #5568d3;
+        }
+
+        .action-btn.delete {
+            background: #dc3545;
+        }
+
+        .action-btn.delete:hover {
+            background: #c82333;
+        }
+
+        .memo-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+
+        .memo-card h3 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .memo-card p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .memo-date {
+            color: #999;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .grid-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .code {
+            background: #f5f5f5;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .loading {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .grid-form {
+                grid-template-columns: 1fr;
+            }
+
+            .user-table {
+                font-size: 12px;
+            }
+
+            .user-table th,
+            .user-table td {
+                padding: 8px;
+            }
+
+            .action-btn {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+
+            .tab-buttons {
+                gap: 5px;
+            }
+
+            .tab-btn {
+                padding: 10px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Section -->
+        <div id="loginSection" class="card">
+            <div class="header">
+                <h1>🔐 Secure Memos</h1>
+                <p>Company Internal Portal</p>
+            </div>
+
+            <div id="loginMessage"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" id="loginBtn">Login</button>
+            </form>
+
+            <p style="text-align: center; margin-top: 15px; color: #666; font-size: 14px;">
+                Demo: admin@company.com / admin123
+            </p>
+        </div>
+
+        <!-- Authenticated Section -->
+        <div id="authSection" class="card hidden">
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="switchTab('memos')">📋 Memos</button>
+                <button class="tab-btn" id="adminTabBtn" onclick="switchTab('admin')" class="hidden">⚙️ Admin</button>
+                <button class="tab-btn" onclick="logout()">🚪 Logout</button>
+            </div>
+
+            <!-- Memos Tab -->
+            <div id="memosTab" class="tab-content active">
+                <div class="header">
+                    <h1>Company Memos</h1>
+                    <p>Welcome, <span id="userEmail"></span></p>
+                </div>
+                <div id="memosContainer"></div>
+            </div>
+
+            <!-- Admin Tab -->
+            <div id="adminTab" class="tab-content hidden">
+                <div class="header">
+                    <h1>Admin Access Management</h1>
+                    <p>Manage user credentials and memos</p>
+                </div>
+
+                <div id="adminMessage"></div>
+
+                <h3 style="margin: 20px 0 15px; color: #333;">Add New User</h3>
+                <form id="addUserForm">
+                    <div class="grid-form">
+                        <div class="form-group">
+                            <label for="newEmail">Email</label>
+                            <input type="email" id="newEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">Password</label>
+                            <input type="password" id="newPassword" required>
+                        </div>
+                    </div>
+                    <button type="submit" id="addUserBtn">Add User</button>
+                </form>
+
+                <h3 style="margin: 30px 0 15px; color: #333;">Current Users</h3>
+                <div id="usersTableContainer"></div>
+
+                <h3 style="margin: 30px 0 15px; color: #333;">Add Memo</h3>
+                <form id="addMemoForm">
+                    <div class="form-group">
+                        <label for="memoTitle">Title</label>
+                        <input type="text" id="memoTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="memoContent">Content</label>
+                        <textarea id="memoContent" required></textarea>
+                    </div>
+                    <button type="submit" id="addMemoBtn">Add Memo</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - adjust API_BASE_URL based on your deployment
+        const API_BASE_URL = 'http://localhost:3000'; // Change for production
+        
+        let currentUser = null;
+        let authToken = null;
+
+        // Initialize app
+        window.addEventListener('load', () => {
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('addUserForm').addEventListener('submit', handleAddUser);
+            document.getElementById('addMemoForm').addEventListener('submit', handleAddMemo);
+        });
+
+        // API call helper
+        async function apiCall(method, endpoint, data = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+
+            if (authToken) {
+                options.headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            if (currentUser) {
+                options.headers['X-User-Email'] = currentUser;
+            }
+
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'API error');
+                }
+
+                return result;
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        // Handle login
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const messageDiv = document.getElementById('loginMessage');
+            const loginBtn = document.getElementById('loginBtn');
+
+            try {
+                loginBtn.disabled = true;
+                loginBtn.textContent = 'Logging in...';
+
+                const result = await apiCall('POST', '/api/login', { email, password });
+
+                currentUser = email;
+                authToken = result.token;
+
+                messageDiv.innerHTML = '';
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('authSection').classList.remove('hidden');
+                document.getElementById('userEmail').textContent = email;
+
+                // Show/hide admin tab
+                const adminTabBtn = document.getElementById('adminTabBtn');
+                if (result.isAdmin) {
+                    adminTabBtn.classList.remove('hidden');
+                    loadUsers();
+                } else {
+                    adminTabBtn.classList.add('hidden');
+                }
+
+                loadMemos();
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="message error">${error.message}</div>`;
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Login';
+            }
+        }
+
+        // Switch tabs
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            if (tabName === 'memos') {
+                document.getElementById('memosTab').classList.add('active');
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                loadMemos();
+            } else if (tabName === 'admin') {
+                document.getElementById('adminTab').classList.add('active');
+                document.getElementById('adminTabBtn').classList.add('active');
+                loadUsers();
+            }
+        }
+
+        // Load memos
+        async function loadMemos() {
+            try {
+                const memos = await apiCall('GET', '/api/memos');
+                renderMemos(memos);
+            } catch (error) {
+                document.getElementById('memosContainer').innerHTML = 
+                    `<div class="message error">Error loading memos: ${error.message}</div>`;
+            }
+        }
+
+        // Render memos
+        function renderMemos(memos) {
+            const container = document.getElementById('memosContainer');
+            
+            if (!memos || memos.length === 0) {
+                container.innerHTML = '<p style="color: #666;">No memos available yet.</p>';
+                return;
+            }
+
+            container.innerHTML = memos.map(memo => `
+                <div class="memo-card">
+                    <h3>${escapeHtml(memo.title)}</h3>
+                    <p>${escapeHtml(memo.content)}</p>
+                    <div class="memo-date">Posted: ${memo.date}</div>
+                </div>
+            `).join('');
+        }
+
+        // Load users
+        async function loadUsers() {
+            try {
+                const users = await apiCall('GET', '/api/users');
+                renderUsersTable(users);
+            } catch (error) {
+                document.getElementById('usersTableContainer').innerHTML = 
+                    `<div class="message error">Error loading users: ${error.message}</div>`;
+            }
+        }
+
+        // Render users table
+        function renderUsersTable(users) {
+            const container = document.getElementById('usersTableContainer');
+            
+            if (!users || users.length === 0) {
+                container.innerHTML = '<p style="color: #666;">No users found.</p>';
+                return;
+            }
+
+            let html = '<table class="user-table"><thead><tr><th>Email</th><th>Password</th><th>Actions</th></tr></thead><tbody>';
+
+            users.forEach((user, index) => {
+                html += `
+                    <tr>
+                        <td>${escapeHtml(user.email)}</td>
+                        <td><span class="code">${escapeHtml(user.password)}</span></td>
+                        <td class="action-buttons">
+                            <button class="action-btn delete" onclick="deleteUser('${escapeHtml(user.email)}')">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Add new user
+        async function handleAddUser(e) {
+            e.preventDefault();
+            const email = document.getElementById('newEmail').value;
+            const password = document.getElementById('newPassword').value;
+            const messageDiv = document.getElementById('adminMessage');
+            const btn = document.getElementById('addUserBtn');
+
+            try {
+                btn.disabled = true;
+                btn.textContent = 'Adding...';
+
+                await apiCall('POST', '/api/users', { newEmail: email, password });
+
+                messageDiv.innerHTML = '<div class="message success">User added successfully!</div>';
+                document.getElementById('addUserForm').reset();
+                await loadUsers();
+
+                setTimeout(() => {
+                    messageDiv.innerHTML = '';
+                }, 3000);
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="message error">${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Add User';
+            }
+        }
+
+        // Delete user
+        async function deleteUser(email) {
+            if (!confirm(`Delete user ${email}?`)) return;
+
+            try {
+                await apiCall('DELETE', `/api/users/${encodeURIComponent(email)}`);
+                document.getElementById('adminMessage').innerHTML = 
+                    '<div class="message success">User deleted successfully!</div>';
+                await loadUsers();
+
+                setTimeout(() => {
+                    document.getElementById('adminMessage').innerHTML = '';
+                }, 3000);
+            } catch (error) {
+                document.getElementById('adminMessage').innerHTML = 
+                    `<div class="message error">${error.message}</div>`;
+            }
+        }
+
+        // Add memo
+        async function handleAddMemo(e) {
+            e.preventDefault();
+            const title = document.getElementById('memoTitle').value;
+            const content = document.getElementById('memoContent').value;
+            const messageDiv = document.getElementById('adminMessage');
+            const btn = document.getElementById('addMemoBtn');
+
+            try {
+                btn.disabled = true;
+                btn.textContent = 'Adding...';
+
+                await apiCall('POST', '/api/memos', { title, content });
+
+                messageDiv.innerHTML = '<div class="message success">Memo added successfully!</div>';
+                document.getElementById('addMemoForm').reset();
+                await loadMemos();
+
+                setTimeout(() => {
+                    messageDiv.innerHTML = '';
+                }, 3000);
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="message error">${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Add Memo';
+            }
+        }
+
+        // Logout
+        function logout() {
+            currentUser = null;
+            authToken = null;
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('loginForm').reset();
+            document.getElementById('loginMessage').innerHTML = '';
+        }
+
+        // Utility function
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+    </script>
+</body>
+</html>
